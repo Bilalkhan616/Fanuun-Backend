@@ -3,7 +3,7 @@ const bodyParser = require("body-parser")
 const UserApi = require('./routes/user')
 const mongoose = require("mongoose")
 const cors = require("cors")
-require('dotenv').config(); // Load environment variables
+require('dotenv').config({ path: "./.env" }); // Load environment variables
 
 mongoose.connect(process.env.MONGODB_URI, {
 }).then(res => {
@@ -15,9 +15,6 @@ mongoose.connect(process.env.MONGODB_URI, {
 const app = express()
 app.use(cors())
 app.use(bodyParser.json())
-// app.use(fileUpload({
-//     useTempFiles: true
-// }))
 
 let port = process.env.PORT || 5050
 
@@ -32,4 +29,4 @@ app.get("/", async (req, res) => {
 })
 app.listen(port, (req, res) => {
     console.log(`listen tooo ${port} `);
-})
+});
