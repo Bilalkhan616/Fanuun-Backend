@@ -1,32 +1,42 @@
-const express = require("express")
-const bodyParser = require("body-parser")
-const UserApi = require('./routes/user')
-const mongoose = require("mongoose")
-const cors = require("cors")
-require('dotenv').config({ path: "./.env" }); // Load environment variables
+// Note: Main server file (Fanuun Project)
 
-mongoose.connect(process.env.MONGODB_URI, {
-}).then(res => {
-    console.log("Connected to MongoDB Atlas database");
-}).catch(err => {
-    console.log("Error connecting to MongoDB:", err);
+// Note: Importing required libraries...!
+const express = require("express");
+const dotenv = require("dotenv");
+const cors = require("cors");
+const morgan = require("morgan");
+
+// Note: Database...!
+const connectMongoDb = require("./src/database/db");
+
+const UserApi = require('./routes/user')
+
+dotenv.config({ path: "./.env" });
+
+connectMongoDb();
+
+const port = process.env.PORT;
+const app = express();
+
+app.use(express.json());
+app.use(cors());
+app.use(morgan("dev"));
+app.set("trust proxy", true);
+
+app.use((req, res, next) => {
+    console.log(`A request came: ${req.body}`);
+    // console.log(`System Ip: ${req.ip}`);
+    // console.log(`Secure ?: ${req.protocol}`);
+    next();
 });
 
-const app = express()
-app.use(cors())
-app.use(bodyParser.json())
 
-let port = process.env.PORT || 5050
+app.get("/", (req, res) => {
+    // console.log(`System Ip: ${req.ip}`);
+    return res.send("<h1> Prince Ahmed is devloping the back-end of fanuun project! 🥰 </h1>");
+});
+app.use('/', UserApi);
 
-app.use('/', UserApi)
-
-app.get("/", async (req, res) => {
-    console.log("Base Url Loaded");
-    res.send({
-        status: true,
-        message: "Base Url Loadedd"
-    })
-})
 app.listen(port, (req, res) => {
-    console.log(`listen tooo ${port} `);
+    console.log(`Server is running on http://localhost:${port}`);
 });

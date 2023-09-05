@@ -3,8 +3,8 @@ const nodemailer = require("nodemailer");
 
 const router = express.Router()
 
-const UserSchema = require('../model/user')
 const BlogSchema = require('../model/blog')
+const UserModel = require("../model/user");
 
 // Note: Function to send email to user...!
 const sendEmail = (email, password, purpose) => {
@@ -61,7 +61,7 @@ router.post('/user/signup', async (req, res) => {
         };
 
         // 401:
-        let isUserExist = await UserSchema.findOne({ email });
+        let isUserExist = await UserModel.findOne({ email });
 
         if (isUserExist) {
             return res.status(404).send({
@@ -79,7 +79,7 @@ router.post('/user/signup', async (req, res) => {
         let securePassword = btoa(generatedPassword);
 
         // Note: Saving user in database...!
-        const newUser = new UserSchema({
+        const newUser = new UserModel({
             email: email,
             password: securePassword,
             role: req.body.role,
@@ -127,7 +127,7 @@ router.post("/user/login", async (req, res) => {
         };
 
         // 404:
-        let isAccountExist = await UserSchema.findOne({ email });
+        let isAccountExist = await UserModel.findOne({ email });
 
         if (!isAccountExist) {
             return res.status(404).send({
@@ -172,7 +172,7 @@ router.post("/update/password", async (req, res) => {
 
     try {
         // 400:
-        let isUserExist = await UserSchema.findOne({ email });
+        let isUserExist = await UserModel.findOne({ email });
         console.log(`User: ${isUserExist}`);
 
         if (!isUserExist) {
@@ -191,7 +191,7 @@ router.post("/update/password", async (req, res) => {
         let securePassword = btoa(generatedPassword);
 
         // Note: Updaing user's password...!
-        let updatePassword = await UserSchema
+        let updatePassword = await UserModel
             .findByIdAndUpdate(
                 isUserExist._id,
                 { password: securePassword },
@@ -317,7 +317,7 @@ router.delete("/delete/all", async (req, res) => {
 // Note: API route to delete blog by id...!
 router.delete("/blog/delete/:id", async (req, res) => {
     let { id } = req.params;
-    console.log(`Blog Id ${id}`);
+    // console.log(`Blog Id ${id}`);
 
     try {
         let deleteBlog = await BlogSchema.deleteOne({ _id: id });
@@ -336,6 +336,43 @@ router.delete("/blog/delete/:id", async (req, res) => {
         return res.status(500).send({
             status: false,
             message: "Something went wrong while deleting blog"
+        });
+    };
+});
+
+// Note: API route to filer blogs by date...!
+router.get("/fetch/blogs/:date", async (req, res) => {
+    let { date } = req.params;
+    // console.log(`Blog data: ${date}`);
+
+    try {
+        // 400:
+        let fetchData = await BlogSchema.find();
+        // let filterData = [...fetchData].filter((item) => { return new Date(item?.blogCreatedAt).getDate() == date });
+        let filterData = [...fetchData].filter((item) => { return new Date(item?.blogCreatedAt).toDateString() == date });
+
+        if (filterData.length < 1) {
+            return res.status(400).send({
+                status: false,
+                message: "Data not found!"
+            });
+        };
+
+        // 200:
+        return res.status(200).send({
+            status: true,
+            message: "Blogs list!",
+            data: filterData
+        });
+    }
+
+    catch (error) {
+        // 500:
+        console.log(`Something went wrong while fetching blogs: ${error}`);
+
+        return res.status(500).send({
+            status: false,
+            message: "Something went wrong while fetching blogs!"
         });
     };
 });
